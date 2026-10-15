@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kontrol Lampu ESP32</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #edf2f7;
+      color: #1e293b;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 380px;
+      padding: 28px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 28px #00000012;
+      text-align: center;
+    }
+
+    h1 { font-size: 25px; margin-top: 0; }
+
+    .lamp {
+      width: 100px;
+      height: 100px;
+      margin: 24px auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #e2e8f0;
+      font-size: 48px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 14px;
+    }
+
+    button {
+      flex: 1;
+      padding: 15px 8px;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.5; }
+    .start { background: #16a34a; }
+    .stop { background: #dc2626; }
+
+    #status {
+      margin-top: 22px;
+      color: #64748b;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>KONTROL LAMPU</h1>
+    <p>ESP32 · GPIO25</p>
+
+    <div class="lamp" id="lamp">💡</div>
+
+    <div class="buttons">
+      <button class="start" onclick="kirim(1)">START</button>
+      <button class="stop" onclick="kirim(0)">STOP</button>
+    </div>
+
+    <p id="status">Server belum dihubungkan.</p>
+  </main>
+
+  <script>
+    // Alamat server akan dimasukkan setelah Cloudflare siap.
+    const API = "GANTI_DENGAN_URL_WORKER";
+    const PIN = "GANTI_DENGAN_KODE_KONTROL";
+
+    async function kirim(nilai) {
+      const status = document.getElementById("status");
+      status.textContent = "Mengirim perintah...";
+
+      try {
+        const respons = await fetch(API + "/api/command", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Control-Pin": PIN
+          },
+          body: JSON.stringify({ led: nilai })
+        });
+
+        if (!respons.ok) throw new Error("Perintah ditolak");
+
+        document.getElementById("lamp").style.background =
+          nilai ? "#fef08a" : "#e2e8f0";
+
+        status.textContent = nilai
+          ? "Perintah START terkirim."
+          : "Perintah STOP terkirim.";
+      } catch (error) {
+        status.textContent =
+          "Belum terhubung. Server perlu disiapkan.";
+      }
+    }
+  </script>
+</body>
+</html>
